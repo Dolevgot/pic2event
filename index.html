@@ -327,7 +327,7 @@
     <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
       <div class="drop-icon">📸</div>
       <div class="drop-text">לחץ להעלאת תמונה</div>
-      <div class="drop-sub">או גרור לכאן · PNG / JPG / WEBP</div>
+      <div class="drop-sub">או גרור לכאן · הדבק עם Ctrl+V · PNG / JPG / WEBP</div>
     </div>
     <input type="file" id="fileInput" accept="image/*" />
 
@@ -422,6 +422,17 @@ dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classL
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
 dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); });
 fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+// Paste support (Ctrl+V / ⌘+V)
+document.addEventListener('paste', e => {
+  const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      handleFile(item.getAsFile());
+      break;
+    }
+  }
+});
 
 function handleFile(file) {
   if (!file || !file.type.startsWith('image/')) return;
