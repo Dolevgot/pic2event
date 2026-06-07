@@ -493,7 +493,16 @@ async function extractEvent() {
   setStatus('⏳ שולח ל-Claude...', false);
   document.getElementById('result').style.display = 'none';
 
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
+  const currentYear = now.getFullYear();
+  const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+
   const prompt = `You are an event extraction assistant. Look at this screenshot and extract any calendar event details.
+Today's date is ${todayStr}. The current year is ${currentYear} and current month is ${currentMonth}.
+If the image shows a date without a year, use ${currentYear}. If the image shows a date without a month, use ${currentMonth}.
+If you cannot find any date at all, use today (${todayStr}).
+If no end time is found, set end to 1 hour after start.
 Return ONLY a valid JSON object — no markdown, no explanation — with these fields:
 {
   "summary": "event title",
@@ -502,7 +511,7 @@ Return ONLY a valid JSON object — no markdown, no explanation — with these f
   "location": "full address or empty string",
   "description": "any extra details or empty string"
 }
-If you cannot find a date, use today's date. If no end time, add 1 hour to start. Never return anything except the JSON object.`;
+Never return anything except the JSON object.`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
