@@ -611,13 +611,15 @@ async function addToCalendar() {
     // datetime-local gives "YYYY-MM-DDTHH:MM" — add seconds if missing
     const toISO = v => v.length === 16 ? v + ':00' : v;
 
+    const createdOn = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const signature = '\n\n---\nCreated with Pic2Event on ' + createdOn;
     const isAllDay = !startRaw.includes('T') && startRaw.length === 10;
     // Google Calendar API requires end date to be the day AFTER the last day for all-day events
     const allDayEnd = isAllDay ? new Date(new Date(endRaw).getTime() + 86400000).toISOString().slice(0,10) : null;
     const body = {
       summary:     document.getElementById('r_summary').value,
       location:    document.getElementById('r_location').value,
-      description: document.getElementById('r_description').value,
+      description: (document.getElementById('r_description').value + signature).trim(),
       start: isAllDay ? { date: startRaw }    : { dateTime: toISO(startRaw), timeZone: tz },
       end:   isAllDay ? { date: allDayEnd }   : { dateTime: toISO(endRaw),   timeZone: tz }
     };
