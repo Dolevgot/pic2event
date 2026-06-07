@@ -612,12 +612,14 @@ async function addToCalendar() {
     const toISO = v => v.length === 16 ? v + ':00' : v;
 
     const isAllDay = !startRaw.includes('T') && startRaw.length === 10;
+    // Google Calendar API requires end date to be the day AFTER the last day for all-day events
+    const allDayEnd = isAllDay ? new Date(new Date(endRaw).getTime() + 86400000).toISOString().slice(0,10) : null;
     const body = {
       summary:     document.getElementById('r_summary').value,
       location:    document.getElementById('r_location').value,
       description: document.getElementById('r_description').value,
-      start: isAllDay ? { date: startRaw } : { dateTime: toISO(startRaw), timeZone: tz },
-      end:   isAllDay ? { date: endRaw }   : { dateTime: toISO(endRaw),   timeZone: tz }
+      start: isAllDay ? { date: startRaw }    : { dateTime: toISO(startRaw), timeZone: tz },
+      end:   isAllDay ? { date: allDayEnd }   : { dateTime: toISO(endRaw),   timeZone: tz }
     };
 
     const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
