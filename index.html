@@ -8,14 +8,14 @@
   <style>
     /* ── TOKENS ── */
     :root {
-      --bg: #0e0e10;
-      --surface: #18181b;
-      --border: #2a2a2e;
-      --accent: #6ee7b7;
-      --accent-dim: #1a3d30;
-      --text: #e4e4e7;
-      --muted: #71717a;
-      --error: #f87171;
+      --bg: #f4f4f5;
+      --surface: #ffffff;
+      --border: #d1d1d6;
+      --accent: #16a34a;
+      --accent-dim: #dcfce7;
+      --text: #09090b;
+      --muted: #52525b;
+      --error: #dc2626;
       --font-mono: 'DM Mono', monospace;
       --font-sans: 'DM Sans', sans-serif;
       --radius: 12px;
@@ -62,11 +62,11 @@
       letter-spacing: -0.02em;
     }
     h1 span { color: var(--accent); font-weight: 500; }
-    .subtitle { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .subtitle { font-size: 13px; color: #52525b; margin-top: 2px; }
 
     /* ── CARD ── */
     .card {
-      background: var(--surface);
+      background: #ffffff;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 20px;
@@ -77,19 +77,19 @@
     .card-label {
       font-family: var(--font-mono);
       font-size: 11px;
-      color: var(--muted);
+      color: #52525b;
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
 
     /* ── CONFIG ── */
     .field { display: flex; flex-direction: column; gap: 6px; }
-    label { font-size: 13px; color: var(--muted); }
+    label { font-size: 13px; color: #3f3f46; }
     input[type="text"], input[type="password"], select {
-      background: var(--bg);
-      border: 1px solid var(--border);
+      background: #ffffff;
+      border: 1px solid #d1d1d6;
       border-radius: 8px;
-      color: var(--text);
+      color: #09090b;
       font-family: var(--font-mono);
       font-size: 12px;
       padding: 10px 12px;
@@ -157,7 +157,7 @@
     /* ── BUTTON ── */
     .btn {
       background: var(--accent);
-      color: #0e0e10;
+      color: #ffffff;
       border: none;
       border-radius: 8px;
       padding: 13px 20px;
@@ -184,7 +184,7 @@
       font-family: var(--font-mono);
       padding: 10px 14px;
       border-radius: 8px;
-      background: var(--surface);
+      background: #ffffff;
       border: 1px solid var(--border);
     }
     #status.error { color: var(--error); border-color: #3d1a1a; background: #1a0e0e; }
@@ -203,22 +203,22 @@
     .result-key {
       font-family: var(--font-mono);
       font-size: 10px;
-      color: var(--muted);
+      color: #52525b;
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
     .result-val {
       font-size: 15px;
-      color: var(--text);
-      background: var(--bg);
-      border: 1px solid var(--border);
+      color: #09090b;
+      background: #ffffff;
+      border: 1px solid #d1d1d6;
       border-radius: 8px;
       padding: 10px 12px;
     }
     .result-val input {
       background: none;
       border: none;
-      color: var(--text);
+      color: #09090b;
       font-family: var(--font-sans);
       font-size: 15px;
       width: 100%;
