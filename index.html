@@ -500,9 +500,7 @@ async function extractEvent() {
 
   const prompt = `You are an event extraction assistant. Look at this screenshot and extract any calendar event details.
 Today's date is ${todayStr}. The current year is ${currentYear} and current month is ${currentMonth}.
-If the image shows a date without a year, use ${currentYear}. If the image shows a date without a month, use ${currentMonth}.
-If you cannot find any date at all, use today (${todayStr}).
-If no end time is found, set end to 1 hour after start.
+IMPORTANT: Do NOT try to match the day name (Monday, Saturday, etc.) to find the year. If the image shows a date without a year, ALWAYS use ${currentYear} — do not infer the year from the day of the week. If the image shows a date without a month, use ${currentMonth}. If you cannot find any date at all, use today (${todayStr}). If no end time is found, set end to 1 hour after start.
 Return ONLY a valid JSON object — no markdown, no explanation — with these fields:
 {
   "summary": "event title",
