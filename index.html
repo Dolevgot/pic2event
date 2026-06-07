@@ -511,7 +511,7 @@ async function extractEvent() {
 
   const prompt = `You are an event extraction assistant. Look at this screenshot and extract any calendar event details.
 Today's date is ${todayStr}. The current year is ${currentYear} and current month is ${currentMonth}.
-IMPORTANT: Do NOT try to match the day name (Monday, Saturday, etc.) to find the year. If the image shows a date without a year, ALWAYS use ${currentYear} — do not infer the year from the day of the week. If the image shows a date without a month, use ${currentMonth}. If you cannot find any date at all, use today (${todayStr}). If no end time is found, set end to 1 hour after start. If the time is shown without AM/PM, use this rule: if the hour is 9 or greater (9, 10, 11), assume AM; if the hour is less than 9 (1, 2, 3, 4, 5, 6, 7, 8) or 12, assume PM. For example: 9:00 → 09:00 (AM), 8:30 → 20:30 (PM), 7:00 → 19:00 (PM), 10:00 → 10:00 (AM).
+IMPORTANT: Do NOT try to match the day name (Monday, Saturday, etc.) to find the year. If the image shows a date without a year, ALWAYS use ${currentYear} — do not infer the year from the day of the week. If the image shows a date without a month, use ${currentMonth}. If you cannot find any date at all, use today (${todayStr}). If no end time is found, set end to 1 hour after start. If the time is shown without AM/PM, use this rule: if the hour is 9 or greater (9, 10, 11), assume AM; if the hour is less than 9 (1, 2, 3, 4, 5, 6, 7, 8) or 12, assume PM. For example: 9:00 → 09:00, 8:30 → 20:30, 7:00 → 19:00, 10:00 → 10:00.
 Return ONLY a valid JSON object — no markdown, no explanation — with these fields:
 {
   "summary": "event title",
