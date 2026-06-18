@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pic2Event</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     /* ── TOKENS ── */
     :root {
@@ -295,13 +296,10 @@
         <label>Google Client ID</label>
         <input type="text" id="googleClientId" placeholder="738495...apps.googleusercontent.com" />
       </div>
-      <div class="field">
-        <label>Google Client Secret</label>
-        <input type="password" id="googleClientSecret" placeholder="GOCSPX-..." autocomplete="off" />
-      </div>
-      <div class="field">
-        <label>Google Refresh Token</label>
-        <input type="password" id="googleRefreshToken" placeholder="1//04Oss4..." autocomplete="off" />
+      <div class="field" id="googleSignInField">
+        <label>חיבור Google Calendar</label>
+        <div id="googleSignInBtn"></div>
+        <div id="googleSignedIn" style="display:none; padding:8px 12px; background:#dcfce7; border-radius:8px; font-size:13px; color:#16a34a;">✓ מחובר ל-Google</div>
       </div>
       <div class="field">
         <label>אזור זמן</label>
@@ -385,7 +383,7 @@
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────────────────
-const KEYS = ['anthropicKey','googleClientId','googleClientSecret','googleRefreshToken','timezone'];
+const KEYS = ['anthropicKey','googleClientId','timezone'];
 
 function loadConfig() {
   KEYS.forEach(k => {
@@ -402,6 +400,8 @@ function saveConfig() {
   });
   setStatus('✓ הגדרות נשמרו', false);
   document.getElementById('configPanel').removeAttribute('open');
+  _tokenClient = null; _googleToken = null;
+  setTimeout(initGoogleSignIn, 300);
 }
 
 function cfg(k) {
@@ -478,21 +478,40 @@ function setLoading(btnId, on) {
   btn.disabled = on;
 }
 
-// ── STEP 1 — GET ACCESS TOKEN ────────────────────────────────────────────────
-async function getAccessToken() {
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id:     cfg('googleClientId'),
-      client_secret: cfg('googleClientSecret'),
-      refresh_token: cfg('googleRefreshToken'),
-      grant_type:    'refresh_token'
-    })
+// ── STEP 1 — GOOGLE IDENTITY SERVICES TOKEN ─────────────────────────────────
+let _googleToken = null;
+let _tokenExpiry  = 0;
+let _tokenClient  = null;
+let _tokenResolve = null;
+
+function initGoogleSignIn() {
+  const clientId = cfg('googleClientId');
+  if (!clientId || !window.google) return;
+
+  _tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: 'https://www.googleapis.com/auth/calendar',
+    callback: (resp) => {
+      if (resp.error) { if (_tokenResolve) _tokenResolve(null); return; }
+      _googleToken = resp.access_token;
+      _tokenExpiry  = Date.now() + (resp.expires_in - 60) * 1000;
+      document.getElementById('googleSignInBtn').style.display  = 'none';
+      document.getElementById('googleSignedIn').style.display   = 'block';
+      if (_tokenResolve) { _tokenResolve(_googleToken); _tokenResolve = null; }
+    }
   });
-  const data = await res.json();
-  if (!data.access_token) throw new Error('לא הצלחתי לקבל Google Access Token. בדוק את ה-Client ID, Secret ו-Refresh Token.');
-  return data.access_token;
+}
+
+async function getAccessToken() {
+  if (!cfg('googleClientId')) throw new Error('חסר Google Client ID — פתח הגדרות.');
+  if (!_tokenClient) initGoogleSignIn();
+  if (!_tokenClient) throw new Error('Google Identity Services לא נטען. רענן את הדף.');
+  if (_googleToken && Date.now() < _tokenExpiry) return _googleToken;
+  // Need new token — prompt user
+  return new Promise((resolve) => {
+    _tokenResolve = resolve;
+    _tokenClient.requestAccessToken({ prompt: _googleToken ? '' : 'consent' });
+  });
 }
 
 // ── STEP 2 — CLAUDE VISION ───────────────────────────────────────────────────
@@ -536,7 +555,7 @@ Never return anything except the JSON array.`;
       },
       body: JSON.stringify({
         model: 'claude-opus-4-5',
-        max_tokens: 500,
+        max_tokens: 1500,
         messages: [{
           role: 'user',
           content: [
@@ -551,11 +570,27 @@ Never return anything except the JSON array.`;
     if (data.error) throw new Error(data.error.message);
 
     const raw = data.content[0].text.trim();
+    console.log('Claude raw response:', raw);
     // Extract JSON array or object from anywhere in the response
     const matchArr = raw.match(/\[[\s\S]*\]/);
     const matchObj = raw.match(/\{[\s\S]*\}/);
     if (!matchArr && !matchObj) throw new Error('Claude לא החזיר JSON תקין. נסה שוב.');
-    let events = matchArr ? JSON.parse(matchArr[0]) : [JSON.parse(matchObj[0])];
+    let events;
+    try {
+      events = matchArr ? JSON.parse(matchArr[0]) : [JSON.parse(matchObj[0])];
+    } catch(parseErr) {
+      // Try sanitizing control characters and retry
+      const sanitized = (matchArr ? matchArr[0] : matchObj[0])
+        .replace(/[\u0000-\u001F\u007F]/g, ' ')  // remove control chars
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, ' ')
+        .replace(/\t/g, ' ');
+      try {
+        events = JSON.parse(sanitized);
+      } catch(e2) {
+        throw new Error('שגיאת JSON: ' + parseErr.message + ' — נסה תמונה אחרת.');
+      }
+    }
     if (!Array.isArray(events)) events = [events];
 
     // Build event cards
@@ -673,6 +708,8 @@ async function addToCalendar() {
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 loadConfig();
+// Init Google Sign In after GIS script loads
+window.addEventListener('load', () => { setTimeout(initGoogleSignIn, 500); });
 </script>
 </body>
 </html>
